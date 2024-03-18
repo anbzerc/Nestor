@@ -14,6 +14,10 @@ def main():
         #print("[%.2fs -> %.2fs] %s" % (segment.start, segment.end, segment.text))
         print(segment.text)
     print(time_savec - time.time())
+
+
+    
+
 if __name__ == "__main__":
     main()
 
