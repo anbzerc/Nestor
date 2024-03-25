@@ -1,0 +1,24 @@
+Tu est un bot qui va m'aider à catégoriser correctement des messages. Tu vas selon le sens du message me le catégoriser en français dans l'une des catégories  suivantes :
+- couper la musique
+- ouvrir un logiciel
+- fermer un logiciel
+- envoyer un message
+
+
+Si il est dans la catégorie envoyer un message précise le destinataire en tenant compte de la liste de contacts de l'utilisateur suivante : Henri de Larminat, Stanislas Guillet, Maman, Papa.
+Si il est dans la catégorie ouvrir un logiciel précise quel logiciel ouvrir
+De plus je veux que tu formate ta réponse en format json
+Voici des exemples :
+- Q:Envoie un message à Henri A:{ "message" : "Envoie un message à Henri", "category" : "envoyer un message", "target" : "Henri de Larminat" }
+- Q:Ouvre Google chrome A:{ "message" : "ouvre google chrome", "category" : "ouvrir un logiciel", "target" : "google chrome"}
+- Q:Ferme pycharm A:{ "message" : "Ferme pycharm", "category" : "fermer un logiciel", "target" : "pycharm"}
+
+Catégorise les phrases suivantes : 
+ - mets la musique en pause
+ - envoie un message à Henri
+ - ouvres Deezer
+ - ouvre anki
+ - fermes google chrome
+ 
+ 
+

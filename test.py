@@ -3,6 +3,7 @@
 import argparse
 import os
 import numpy as np
+import ollama
 import speech_recognition as sr
 from faster_whisper import WhisperModel
 import torch
@@ -11,12 +12,16 @@ from datetime import datetime, timedelta
 from queue import Queue
 from time import sleep
 from sys import platform
-
+from Utils import Verbose
+from Utils import ActionParser
 
 def main():
+
+## Arguments parser
+
     parser = argparse.ArgumentParser()
-    parser.add_argument("--model", default="medium", help="Model to use",
-                        choices=["tiny", "base", "small", "medium", "large"])
+    parser.add_argument("--model", default="whisper-large-v3-french-distil-dec16", help="Model to use",
+                        choices=["whisper-large-v3-french", "whisper-large-v3-french-distil-dec16"])
     parser.add_argument("--non_english", action='store_true',
                         help="Don't use the english model.")
     parser.add_argument("--energy_threshold", default=1000,
@@ -26,12 +31,20 @@ def main():
     parser.add_argument("--phrase_timeout", default=3,
                         help="How much empty space between recordings before we "
                              "consider it a new line in the transcription.", type=float)
+    parser.add_argument("-v", "--verbose", default=False, help="Verbose mode")
+
     if 'linux' in platform:
         parser.add_argument("--default_microphone", default='pulse',
                             help="Default microphone name for SpeechRecognition. "
                                  "Run this with 'list' to view available Microphones.", type=str)
+
     args = parser.parse_args()
 
+    # Set verbose bolean
+    if not args.verbose:
+        is_verbose = True
+    else:
+        is_verbose = False
     # The last time a recording was retrieved from the queue.
     phrase_time = None
     # Thread safe Queue for passing data from the threaded recording callback.
@@ -41,6 +54,8 @@ def main():
     recorder.energy_threshold = args.energy_threshold
     # Definitely do this, dynamic energy compensation lowers the energy threshold dramatically to a point where the SpeechRecognizer never stops recording.
     recorder.dynamic_energy_threshold = False
+
+# Micro settings
 
     # Important for linux users.
     # Prevents permanent application hang and crash by using the wrong Microphone
@@ -59,15 +74,20 @@ def main():
     else:
         source = sr.Microphone(sample_rate=16000)
 
-    # Load / Download model
-    model = args.model
-    if args.model != "large" and not args.non_english:
-        model = model + ".en"
-    audio_model = WhisperModel("medium", device="cuda", compute_type="float16")
-    #audio_model = WhisperModel("./models/whisper-large-v3-french-distil-dec2/ctranslate2", device="cuda", compute_type="float16")
+
+# Load model
+
+    if args.model == "whisper-large-v3-french":
+        audio_model = WhisperModel("./models/whisper-large-v3-french/ctranslate2", device="cuda",
+                                   compute_type="float16")
+    elif args.model == "whisper-large-v3-french-distil-dec16":
+        audio_model = WhisperModel("./models/whisper-large-v3-french-distil-dec16/ctranslate2", device="cuda",
+                                   compute_type="float16")
+
     record_timeout = args.record_timeout
     phrase_timeout = args.phrase_timeout
 
+    # Blank variable wich will contain the transcription
     transcription = ['']
 
     with source:
@@ -86,7 +106,8 @@ def main():
     # We could do this manually but SpeechRecognizer provides a nice helper.
     recorder.listen_in_background(source, record_callback, phrase_time_limit=record_timeout)
 
-    # Cue the user that we're ready to go.
+    # Verbose not necessary I think
+
     print("Model loaded.\n")
 
     while True:
@@ -113,11 +134,15 @@ def main():
 
                 # Read the transcription.
                 result, info = audio_model.transcribe(audio_np, language="fr")
-                text_tmp=""
+                text_tmp = ""
+
+                # Iterate in segment because it's FasterWhisper
                 for segment in result:
-                    text_tmp+=segment.text
+                    text_tmp += segment.text
                 text = text_tmp.strip()
-                print("transcription en {} seconde".format(datetime.utcnow() - phrase_time))
+
+                # Print transcription's time
+                Verbose.verbose_print(is_verbose, "transcription en {} seconde".format(datetime.utcnow() - phrase_time), " : ", text)
                 # If we detected a pause between recordings, add a new item to our transcription.
                 # Otherwise edit the existing one.
                 if phrase_complete:
@@ -125,15 +150,16 @@ def main():
                 else:
                     transcription[-1] = text
 
+                # Parse user's input to know which action to do
+                ActionParser.action_parser(text)
                 # Clear the console to reprint the updated transcription.
-                #os.system('cls' if os.name == 'nt' else 'clear')
-                for line in transcription:
-                    print(line)
+                # os.system('cls' if os.name == 'nt' else 'clear')
+
                 # Flush stdout.
                 print('', end='', flush=True)
             else:
                 # Infinite loops are bad for processors, must sleep.
-                sleep(0.25)
+                sleep(0.1)
         except KeyboardInterrupt:
             break
 
@@ -144,3 +170,4 @@ def main():
 
 if __name__ == "__main__":
     main()
+
