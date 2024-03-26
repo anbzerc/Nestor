@@ -180,7 +180,7 @@ config.read("config.ini")
 config["Nestor voice config"] = {"medium": "$$".join(transcription_medium),
                                  "large": "$$".join(transcription_large)
                                  }
-with open("config.ini", "w") as configfile:
+with open("Docs/config.ini", "w") as configfile:
     config.write(configfile)
 
 print("\n\nTranscription:")
