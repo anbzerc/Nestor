@@ -14,13 +14,17 @@ pour que ce soit ajouté dans la liste d'actions possible proposée au modèle m
 bricolé mais ça ira le temps de faire potentiellement un vrai système de plugins) ajouter au fichier actions.py la fonction
 qui réalise la dite action (des fichiers complémentaires peuvent être rajoutés dans Plugins/le_nom_du_plugin/ )
 ### Dev des plugins
-- utiliser subprocess avec verification du résultat et timeout
+- si utilisation subprocess -> avec verification du résultat et timeout
 - utiliser la fonction maison verbose pour les prints non nécessaires
+- s'ajouter dans la action.json avec le nom du package
 ## To Do :
 1. [ ] Système de plugins robuste (pdf dans le dossier principal)
 2. [ ] Système de nommage de plugins cool
 3. [ ] (Vraiment plus tard) package pip
 4. [ ] Interface graphique pour paramétrer les logiciels et avoir leurs chemins d'accès (genre lancer musique -> Deezer)
 5. [ ] quand ça sera plus en prod gérer du verbose ou non
+6. [ ] Systeme de cache
 
 ### Projets utilisés :
+- https://dev.to/charlesw001/plugin-architecture-in-python-jla
+- https://mathieularose.com/plugin-architecture-in-python
