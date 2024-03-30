@@ -11,3 +11,5 @@ class PluginModel(ABC):
     @abstractmethod
     def test(self):
         pass
+
+    #TODO methode qui ajoute les categorie, target au Action.json

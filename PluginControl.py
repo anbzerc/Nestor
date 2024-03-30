@@ -15,6 +15,8 @@ class PluginControl():
         for _, name, _ in self.iter_namespace(Plugins):
             # parcours le package plugin pour importer les modules (importe le __init__.py)
             # ça execute à chaque import tout le __init__.py
+            #TODO rajouter un verbose
+            print(name)
             self.plugins.append(importlib.import_module(name))
 
     def get_plugin_by_name(self, name):

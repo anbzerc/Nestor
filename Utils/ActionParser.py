@@ -8,9 +8,15 @@ import ollama
 def action_parser(user_input:str):
     """Function which parse user input to understand which action to do"""
     prompt=""
+
+    #Initialize variable
+    category=""
+    target=""
     #Get prompt in config file
     with open("Docs/prompt_prod.txt") as file:
         prompt = file.read()
+
+    # TODO Then get all category to give to the model in Action.json
     message=prompt+user_input
     #print(message)
 
@@ -34,23 +40,13 @@ def action_parser(user_input:str):
     except :
         return False, response_parsed
 
+    #TODO get category and target associated plugin
 #action_parser("Met la musique en pause")
 
 
 class ActionParser():
-    def __init__(self, plugins:list=[]):
-        if plugins != []:
-            self._plugins = [
-                importlib.import_module(plugin, f"Plugins.{plugin}").Plugins() for plugin in plugins
-            ]
-            self._plugins.append([
-                importlib.import_module(plugin, ".").Plugins() for plugin in plugins
-            ])
-        else :
-            self._plugins = [
-                importlib.import_module(plugin, ".").Plugins() for plugin in plugins
-            ]
-
+    def __init__(self):
+        pass
     def action_parser(user_input: str):
         """Function which parse user input to understand which action to do"""
         prompt = ""

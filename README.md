@@ -13,6 +13,17 @@ Pour l'instant la méthode pour ajouter des actions va être d'ajouter le libell
 pour que ce soit ajouté dans la liste d'actions possible proposée au modèle mistral. Il faudra aussi (ça va être un peu
 bricolé mais ça ira le temps de faire potentiellement un vrai système de plugins) ajouter au fichier actions.py la fonction
 qui réalise la dite action (des fichiers complémentaires peuvent être rajoutés dans Plugins/le_nom_du_plugin/ )
+
+Action.json :
+
+`{
+  "category" : {  -> this is the list of all category given to the model
+    "ouvrir un logiciel" : { -> example category
+      "Deezer" : "OpenDeezer" -> list of all possible targets and its associated plugin
+    }
+  }
+}`
+
 ### Dev des plugins
 - si utilisation subprocess -> avec verification du résultat et timeout
 - utiliser la fonction maison verbose pour les prints non nécessaires
