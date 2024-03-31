@@ -5,8 +5,10 @@ import json
 import jsonpickle
 import ollama
 
+from PluginControl import PluginControl
 
-def action_parser(user_input:str):
+
+def action_parser(user_input:str, pluginControl:PluginControl):
     """Function which parse user input to understand which action to do"""
     prompt=""
 
@@ -42,6 +44,8 @@ def action_parser(user_input:str):
         category = response_parsed["category"]
         if "target" in response_parsed :
             target = response_parsed["target"]
+            plugin_name=decoded_json["category"][category][target]
+            pluginControl.get_plugin_by_name(plugin_name).run()
             return True, user_input, category, target
 
         return True, user_input, category, "no target"
