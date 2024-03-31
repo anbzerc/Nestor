@@ -23,7 +23,9 @@ Action.json :
     }
   }
 }`
-
+### Prompt architecture 
+First is prompt instruction, then all "categories" -> which will be filled by category in action.json
+Then the "special instruction", then the json requirement for the model and then the example (given in plugin.yaml)
 ### Dev des plugins
 - si utilisation subprocess -> avec verification du résultat et timeout
 - utiliser la fonction maison verbose pour les prints non nécessaires
