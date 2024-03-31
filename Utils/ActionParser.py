@@ -26,11 +26,11 @@ def action_parser(user_input:str):
     categories = "\n - ".join(decoded_json["category"].keys())
 
     #print(prompt_list[0]+category+prompt_list[1]+"special instruction"+prompt_list[2]+"test example"+prompt_list[3]+"user input")
-    message=prompt_list[0]+categories+prompt_list[1]+"special instruction"+prompt_list[2]+"test example"+prompt_list[3]+"user input"
-
+    message=prompt_list[0]+categories+prompt_list[1]+"special instruction"+prompt_list[2]+"test example"+prompt_list[3]+user_input
 
     # Send user's input to the model
-    response_json = ollama.generate(model="mistral-temp-0.1", prompt=message)["response"]
+    response = ollama.generate(model="mistral-temp-0.1", prompt=message)["response"]
+    response_json = "{"+response.split("{")[1].split("}")[0]+"}"
     try :
         response_parsed = json.loads(response_json)
     except :

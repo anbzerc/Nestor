@@ -1,1 +1,8 @@
-{"category": {"ouvrir un logiciel": {"ouvrir deezer": "OpenDeezer"}}}
+{
+  "category": {
+    "ouvrir un logiciel": {
+      "Chrome": "OpenChrome",
+      "Deezer": "OpenDeezer"
+    }
+  }
+}

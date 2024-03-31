@@ -8,5 +8,9 @@ Si il est dans la catégorie ouvrir un logiciel précise quel logiciel ouvrir
 De plus je veux que tu formate ta réponse en format json
 Voici des exemples :
 
+- Q:Envoie un message à Henri A:{ "message" : "Envoie un message à Henri", "category" : "envoyer un message", "target" : "Henri de Larminat" }
+- Q:Ouvre Google chrome A:{ "message" : "ouvre google chrome", "category" : "ouvrir un logiciel", "target" : "google chrome"}
+- Q:Ferme pycharm A:{ "message" : "Ferme pycharm", "category" : "fermer un logiciel", "target" : "pycharm"}
+
 ##Separator
 Catégorise la phrase suivante :

@@ -13,7 +13,7 @@ def main():
 ## Arguments parser
 
     parser = argparse.ArgumentParser()
-    parser.add_argument("--model", default="whisper-large-v3-french-distil-dec16", help="Model to use",
+    parser.add_argument("--model", default="whisper-large-v3-french", help="Model to use",
                         choices=["whisper-large-v3-french", "whisper-large-v3-french-distil-dec16"])
     parser.add_argument("--non_english", action='store_true',
                         help="Don't use the english model.")
@@ -85,7 +85,7 @@ def main():
     transcription = ['']
 
     with source:
-        recorder.adjust_for_ambient_noise(source)
+        recorder.adjust_for_ambient_noise(source, 2)
 
     def record_callback(_, audio: sr.AudioData) -> None:
         """
@@ -139,7 +139,7 @@ def main():
                 transcription_end_time = datetime.utcnow()
                 transcription_duration = transcription_end_time - transcription_start_time
 
-
+                verbose_print(is_verbose, "Trasncription en {} : {}".format(transcription_duration, text))
                 # If we detected a pause between recordings, add a new item to our transcription.
                 # Otherwise edit the existing one.
                 if phrase_complete:
@@ -153,7 +153,7 @@ def main():
                 action_parsed = action_parser(text)
                 parsing_end_time = datetime.utcnow()
                 parsing_duration=parsing_end_time-parsing_start_time
-
+                verbose_print(is_verbose, f"Model en {parsing_duration}")
                 if action_parsed[0] :
                     #Print return in verbose
                     verbose_print(is_verbose, "Message : {} \n transcription duration : {}\t model processing duration : {} \n action : {} target : {}\n\n".format(
