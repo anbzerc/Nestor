@@ -30,6 +30,11 @@ Then the "special instruction", then the json requirement for the model and then
 - si utilisation subprocess -> avec verification du résultat et timeout
 - utiliser la fonction maison verbose pour les prints non nécessaires
 - s'ajouter dans la action.json avec le nom du package
+
+Pour le repo des plugins :
+- index.json contient tout les noms des plugins
+- plugins/ contient les packages des plugins
+- icons/ contients leurs icones
 ## To Do :
 1. [ ] Système de plugins robuste (pdf dans le dossier principal)
 2. [ ] Système de nommage de plugins cool
@@ -37,7 +42,10 @@ Then the "special instruction", then the json requirement for the model and then
 4. [ ] Interface graphique pour paramétrer les logiciels et avoir leurs chemins d'accès (genre lancer musique -> Deezer)
 5. [ ] quand ça sera plus en prod gérer du verbose ou non
 6. [ ] Systeme de cache
+7. [ ] Attention ya toujours mon token github dans plugin utils
 
 ### Projets utilisés :
 - https://dev.to/charlesw001/plugin-architecture-in-python-jla
 - https://mathieularose.com/plugin-architecture-in-python
+
+
