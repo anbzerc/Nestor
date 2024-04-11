@@ -1,0 +1,26 @@
+<!DOCTYPE html>
+<html lang="fr">
+   <head>
+      <meta charset="UTF-8">
+      <title>Nestor</title>
+      <link href="{{ url_for('static', filename='style.css') }}" rel="stylesheet">
+   </head>
+   <body>
+      <div class="grid-container">
+         <nav class="navbar">
+            <img src="{{ url_for('static', filename='Images/chevron.png') }}" alt="Menu logo" title="Menu" class="menu-icon">
+         </nav>
+         <div class="Nestor-container">
+            <img src="{{ url_for('static', filename='Images/Nestor.png') }}" class="Nestor-icon">
+         </div>
+         <div id="mySidebar" class="sidebar">
+         	<div class="Logo">
+         		<img src="{{ url_for('static', filename='Images/TopLogo.png') }}" class="TopLogo">
+         	</div>
+            <div class="Plugins"><h4>Plugins</h4></div>
+            <div class="Settings"><h4>Settings</h4></div>
+         </div>
+      </div>
+      <script src="{{ url_for('static', filename='main.js') }}"></script>
+   </body>
+</html>

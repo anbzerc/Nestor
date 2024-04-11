@@ -1,0 +1,31 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <title>Nestor</title>
+    <meta name="viewport" content="width=device-width,initial-scale=1">
+    <link href="{{ url_for('static', filename='plugins.css') }}" rel="stylesheet">
+
+</head>
+<body>
+<main class="main">
+    <aside id="mySidebar" class="sidebar">
+        <div class="Logo">
+            <img src="{{ url_for('static', filename='Images/TopLogo.png') }}" class="TopLogo">
+        </div>
+        <div class="Plugins"><h4>Plugins</h4></div>
+        <div class="Settings"><h4>Settings</h4></div>
+    </aside>
+    <div class="grid-container">
+        <nav class="navbar">
+            <img src="{{ url_for('static', filename='Images/chevron.png') }}" alt="Menu logo" title="Menu"
+                 class="menu-icon">
+        </nav>
+        <div class="content">
+        </div>
+    </div>
+    <img src="{{ url_for('static', filename='Images/download.png') }}" id="WillBeHideItsJustToGetIconUrl" class="WillBeHideItsJustToGetIconUrl">
+    <script src="{{ url_for('static', filename='Plugins.js') }}"></script>
+</main>
+</body>
+</html>
