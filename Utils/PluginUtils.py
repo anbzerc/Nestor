@@ -5,6 +5,7 @@ import base64
 import importlib
 import json
 import logging
+import os
 import pathlib
 import pkgutil
 import shutil
@@ -63,21 +64,42 @@ def download_directory(repository, server_path, name, is_folder=False, folder_na
                     file_out = open(general_path + content.name, "w")
                     file_out.write(str(file_data))
                     file_out.close()
-            except (GithubException, IOError) as exc:
+            except Exception as exc:
                 logging.error('Error processing %s: %s', content.path, exc)
+                return False
 
 
 def download_plugin(name):
     g = Github("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")
     repo = g.get_repo("anbzerc/Nestor-plugins")
     path = f"Plugins/{name}"
-    download_directory(repo, path, name)
+    if not is_plugin_installed(name):
+        return download_directory(repo, path, name)
+    else:
+        return True
 
 
 def remove_plugin(name):
     general_path = str(pathlib.Path().absolute()).split("/Utils")[0] + "/Plugins/" + name
-    if pathlib.Path(general_path).exists():
+    if is_plugin_installed(name):
         shutil.rmtree(general_path)
         return True
     else:
         return False
+
+
+def is_plugin_installed(name):
+    general_path = str(pathlib.Path().absolute()).split("/Utils")[0] + "/Plugins/" + name
+    if pathlib.Path(general_path).exists():
+        return True
+    else:
+        return False
+
+def list_installed_plugin():
+    #Get absolute path
+    general_path = str(pathlib.Path().absolute()).split("/Utils")[0] + "/Plugins/"
+    list = os.listdir(general_path)
+    #Remove file that are not plugins folders
+    list.remove("__pycache__")
+    list.remove("__init__.py")
+    return list

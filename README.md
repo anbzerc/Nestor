@@ -34,18 +34,22 @@ Then the "special instruction", then the json requirement for the model and then
 Pour le repo des plugins :
 - index.json contient tout les noms des plugins
 - plugins/ contient les packages des plugins
-- icons/ contients leurs icones
 ## To Do :
-1. [ ] Système de plugins robuste (pdf dans le dossier principal)
+1. [x] Système de plugins robuste (pdf dans le dossier principal)
 2. [ ] Système de nommage de plugins cool
 3. [ ] (Vraiment plus tard) package pip
-4. [ ] Interface graphique pour paramétrer les logiciels et avoir leurs chemins d'accès (genre lancer musique -> Deezer)
-5. [ ] quand ça sera plus en prod gérer du verbose ou non
+4. [x] Interface graphique pour paramétrer les logiciels et avoir leurs chemins d'accès (genre lancer musique -> Deezer)
+5. [x] quand ça sera plus en prod gérer du verbose ou non
 6. [ ] Systeme de cache
 7. [ ] Attention ya toujours mon token github dans plugin utils
 
+
+## Dev roadmap
+- make a web client (not just plugins installation)
 ### Projets utilisés :
 - https://dev.to/charlesw001/plugin-architecture-in-python-jla
 - https://mathieularose.com/plugin-architecture-in-python
+- https://github.com/davabase/whisper_real_time
+- https://github.com/Ant-Brain/EfficientWord-Net
 
 
