@@ -1,4 +1,7 @@
 import argparse
+import pathlib
+from threading import Thread
+
 import numpy as np
 import speech_recognition as sr
 from faster_whisper import WhisperModel
@@ -6,22 +9,52 @@ from datetime import datetime, timedelta
 from queue import Queue
 from time import sleep
 from sys import platform
-from Utils.ActionParser import action_parser
-from Utils.Verbose import verbose_print
-def main():
 
-    is_verbose = True
+from PluginControl import PluginControl
+from Utils.ActionParser import action_parser, get_plugins_litterals
+from Utils.Verbose import verbose_print
+
+
+def main():
+    # Arguments parser
+
+    global source
+    parser = argparse.ArgumentParser()
+    parser.add_argument("--model", default="whisper-large-v3-french", help="Model to use",
+                        choices=["whisper-large-v3-french", "whisper-large-v3-french-distil-dec16"])
+    parser.add_argument("--non_english", action='store_true',
+                        help="Don't use the english model.")
+    parser.add_argument("--energy_threshold", default=1000,
+                        help="Energy level for mic to detect.", type=int)
+    parser.add_argument("--record_timeout", default=2,
+                        help="How real time the recording is in seconds.", type=float)
+    parser.add_argument("-v", "--verbose", action="store_false", help="Verbose mode")
+
+    if 'linux' in platform:
+        parser.add_argument("--default_microphone", default='pulse',
+                            help="Default microphone name for SpeechRecognition. "
+                                 "Run this with 'list' to view available Microphones.", type=str)
+
+    args = parser.parse_args()
+
+    # Set verbose bolean
+    if not args.verbose:
+        is_verbose = True
+        print("Verbose mode")
+    else:
+        is_verbose = False
     # The last time a recording was retrieved from the queue.
     phrase_time = None
-    # Thread safe Queue for passing data from the threaded recording callback.
-    data_queue = Queue()
+
     # We use SpeechRecognizer to record our audio because it has a nice feature where it can detect when speech ends.
     recorder = sr.Recognizer()
-    recorder.energy_threshold = 1000
+    recorder.energy_threshold = args.energy_threshold
     # Definitely do this, dynamic energy compensation lowers the energy threshold dramatically to a point where the SpeechRecognizer never stops recording.
     recorder.dynamic_energy_threshold = False
 
-# Micro settings
+    #
+    # Micro settings
+    #
 
     # Important for linux users.
     # Prevents permanent application hang and crash by using the wrong Microphone
@@ -40,8 +73,9 @@ def main():
     else:
         source = sr.Microphone(sample_rate=16000)
 
-
-# Load model
+    #
+    # Load proper model
+    #
 
     if args.model == "whisper-large-v3-french":
         audio_model = WhisperModel("./models/whisper-large-v3-french/ctranslate2", device="cuda",
@@ -49,16 +83,37 @@ def main():
     elif args.model == "whisper-large-v3-french-distil-dec16":
         audio_model = WhisperModel("./models/whisper-large-v3-french-distil-dec16/ctranslate2", device="cuda",
                                    compute_type="float16")
-
+    else:
+        audio_model = WhisperModel("./models/whisper-large-v3-french-distil-dec16/ctranslate2", device="cuda",
+                                   compute_type="float16")
     record_timeout = args.record_timeout
-    phrase_timeout = args.phrase_timeout
 
-    # Blank variable wich will contain the transcription
+    # Blank variable which will contain the transcription
     transcription = ['']
+    # Variable which contain Nestor folder absolute path
+    root_path = base_path = str(pathlib.Path().absolute()).split("Nestor")[0] + "Nestor"
+
 
     with source:
         recorder.adjust_for_ambient_noise(source, 2)
 
+    #
+    # Queues
+    #
+
+    # Thread safe Queue for passing data from the threaded recording callback.
+    data_queue = Queue()
+
+    # One queue to check if we continue another for the text data
+    must_continue = Queue()
+    text_data = Queue()
+
+    #
+    #   Set an instance of our PluginControl class
+    #
+    PluginControlInstance = PluginControl()
+
+    # callback funtion which will add audio to queue
     def record_callback(_, audio: sr.AudioData) -> None:
         """
         Threaded callback function to receive audio data when recordings finish.
@@ -72,20 +127,17 @@ def main():
     # We could do this manually but SpeechRecognizer provides a nice helper.
     recorder.listen_in_background(source, record_callback, phrase_time_limit=record_timeout)
 
-    # Verbose not necessary I think
-
     print("Model loaded.\n")
 
+    #
+    # Main loop
+    #
     while True:
+        # Try except in order to end program if there's a Ctrl+c
         try:
             now = datetime.utcnow()
             # Pull raw recorded audio from the queue.
             if not data_queue.empty():
-                phrase_complete = False
-                # If enough time has passed between recordings, consider the phrase complete.
-                # Clear the current working audio buffer to start over with the new data.
-                if phrase_time and now - phrase_time > timedelta(seconds=phrase_timeout):
-                    phrase_complete = True
                 # This is the last time we received new audio data from the queue.
                 phrase_time = now
 
@@ -100,10 +152,11 @@ def main():
 
                 # Read the transcription and save its duration
                 transcription_start_time = datetime.utcnow()
-                result, info = audio_model.transcribe(audio_np, language="fr")
+                result, info = audio_model.transcribe(audio_np, language="fr", vad_filter=True)  # we set VAD filter on
 
                 # Iterate in segment because it's FasterWhisper
                 text_tmp = ""
+
                 for segment in result:
                     text_tmp += segment.text
                 text = text_tmp.strip()
@@ -111,37 +164,164 @@ def main():
                 transcription_end_time = datetime.utcnow()
                 transcription_duration = transcription_end_time - transcription_start_time
 
-                verbose_print(is_verbose, "Trasncription en {} : {}".format(transcription_duration, text))
-                # If we detected a pause between recordings, add a new item to our transcription.
-                # Otherwise edit the existing one.
-                if phrase_complete:
-                    transcription.append(text)
+                verbose_print(is_verbose, "Transcription en {} : {}".format(transcription_duration, text))
+
+                # Add text to our transcription list
+                transcription.append(text)
+
+                # Dirty hotword check
+
+                if "nestor" in text.lower():
+
+                    # Check if user said end command, if so we parse action only one time, and we cut the transcription given to the action parser
+                    # after the 'merci nestor'
+                    # If there's not 'merci nestor', we will call the plugin in a loop
+
+                    if "merci nestor" not in text.lower():
+                        # Parse user's input to know which action to do nad save its realization time
+                        parsing_start_time = datetime.utcnow()
+
+                        action_parsed = action_parser(text, root_path)
+
+                        parsing_end_time = datetime.utcnow()
+                        parsing_duration = parsing_end_time - parsing_start_time
+                        verbose_print(is_verbose, f"Model ran in {parsing_duration} s")
+
+                        # Check if action parsing was successful
+                        if action_parsed["state"]:
+                            # Print return in verbose TODO use pprint
+                            verbose_print(is_verbose,
+                                          f'''Message : {action_parsed["input"]} \n transcription duration : {transcription_duration}
+                                          \t model processing duration : {parsing_duration} 
+                                          \n action : {action_parsed["action"]} 
+                                          target : {action_parsed["target"]}
+                                          \n\n
+                                          ''')
+
+                            # get the parsed name of the plugin to run
+                            name = action_parsed["name"]
+
+                            # Check if this name is not None
+
+                            if name is not None:
+
+                                # and if so, we call the proper plugin, in a thread because we didn't get the end word 'merci Nestor'
+
+                                plugin = PluginControlInstance.get_plugin_by_name(name)
+                                must_continue.put(True)
+                                # Clear text data queue and must_continue queue and
+                                # push the first data in text data queue and True in must continue queue
+                                text_data.queue.clear()
+                                text_data.put(text)
+
+                                must_continue.queue.clear()
+                                must_continue.put(True)
+
+                                # Set the thread in which the plugin will run
+                                thread = Thread(target=plugin.run, args=(must_continue, data_queue))
+                                # Then start the thread
+                                thread.start()
+
+                                #
+                                # Loop to continue sending text to plugin (in its Thread) while close command has not been said,
+                                # and while the last element of must_continue queue is True (when the plugin end,
+                                # it add False to this queue)
+                                #
+
+                                while must_continue.queue[-1]:
+
+                                    # sleep for processor
+                                    sleep(0.01)
+
+                                    # Check if we got new audio, if so we'll do the same as before to transcribe audio
+                                    # and we'll add transcribed text to text data queue
+                                    if not data_queue.empty():
+
+                                        # This is the last time we received new audio data from the queue.
+                                        phrase_time = now
+                                        # same as above
+                                        audio_data = b''.join(data_queue.queue)
+                                        data_queue.queue.clear()
+                                        audio_np = np.frombuffer(audio_data, dtype=np.int16).astype(
+                                            np.float32) / 32768.0
+
+                                        # Read the transcription and save its duration
+                                        transcription_start_time = datetime.utcnow()
+                                        result, info = audio_model.transcribe(audio_np, language="fr")
+
+                                        # Iterate in segment because it's FasterWhisper
+                                        text_tmp = ""
+                                        for segment in result:
+                                            text_tmp += segment.text
+                                        text = text_tmp.strip()
+                                        transcription_end_time = datetime.utcnow()
+                                        transcription_duration = transcription_end_time - transcription_start_time
+
+                                        verbose_print(is_verbose,
+                                                      "Trasncription en {} : {}".format(transcription_duration, text))
+
+                                        transcription.append(text)
+
+                                        # Check if there's not 'merci nestor' in transcription
+                                        if "merci nestor" in text.lower():
+                                            # If so we put the transcription in queue and break the loop
+                                            data_queue.put(text.lower().split("merci nestor")[0] + "merci nestor")
+                                            break
+                                        else :
+                                            # Add these data to data queue to give them to the plugin in its thread and iterate pne more time
+                                            data_queue.put(text)
+
+
+                            # If action is None, display a proper message
+                            else:
+                                print(
+                                    f'''Message : {action_parsed["input"]} \n transcription duration : {transcription_duration}
+                                          \t model processing duration : {parsing_duration} 
+                                          \n action : {action_parsed["action"]} 
+                                          target : 033[1;31m Not found
+                                          \n\n
+                                          ''')
+                        # If action parsing's state is False, print Error message
+                        else:
+                            print("\n \033[1;31m Error during parsing : {} \n".format(action_parsed["input"]))
+
+                    # If there's "merci nestor" in user input, we will parse action, etc, only one time
+                    # and we give the text before "merci nestor"
+
+                    else:
+                        parsing_start_time = datetime.utcnow()
+                        #parse action                 we split text by merci nestor, then select the part before merci nestor and add it for the plugin
+                        action_parsed = action_parser(text.lower().split("merci nestor")[0] + "merci nestor", root_path)
+                        parsing_end_time = datetime.utcnow()
+                        parsing_duration = parsing_end_time - parsing_start_time
+                        verbose_print(is_verbose, f"Model en {parsing_duration}")
+
+                        if action_parsed[0]:
+                            # Get plugin name in action parser's return
+                            name = action_parsed["name"]
+
+                            # Get an instance of this plugin
+                            plugin = PluginControlInstance.get_plugin_by_name(name)
+
+                            # And execute run() method of the plugin in a thread
+                            thread = Thread(plugin.run(text))
+                            # Launch thread
+                            thread.start()
+                            # Print return in verbose
+                            verbose_print(is_verbose,
+                                          "Message : {} \n transcription duration : {}\t model processing duration : {} \n action : {} target : {}\n\n".format(
+                                              action_parsed[1],
+                                              transcription_duration,
+                                              parsing_duration,
+                                              action_parsed[2],
+                                              action_parsed[3]
+                                          ))
+                        else:
+                            print("\n Error during parsing : {} \n".format(action_parsed[1]))
                 else:
-                    transcription[-1] = text
+                    verbose_print(is_verbose, f"Not for Nestor : {text}")
 
-
-                # Parse user's input to know which action to do nad save its realization time
-                parsing_start_time = datetime.utcnow()
-                action_parsed = action_parser(text)
-                parsing_end_time = datetime.utcnow()
-                parsing_duration=parsing_end_time-parsing_start_time
-                verbose_print(is_verbose, f"Model en {parsing_duration}")
-                if action_parsed[0] :
-                    #Print return in verbose
-                    verbose_print(is_verbose, "Message : {} \n transcription duration : {}\t model processing duration : {} \n action : {} target : {}\n\n".format(
-                        action_parsed[1],
-                        transcription_duration,
-                        parsing_duration,
-                        action_parsed[2],
-                        action_parsed[3]
-                    ))
-                else :
-                    print("\n Error during parsing : {} \n".format(action_parsed[1]))
-                # Clear the console to reprint the updated transcription.
-                # os.system('cls' if os.name == 'nt' else 'clear')
-
-                # Flush stdout.
-                #print('', end='', flush=True)
+            # If the audio data queue is empty, sleep a bit and restart
             else:
                 # Infinite loops are bad for processors, must sleep.
                 sleep(0.1)

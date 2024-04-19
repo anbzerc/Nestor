@@ -4,6 +4,7 @@ import pkgutil
 import jsonpickle
 
 import Plugins
+from PluginCore import PluginModel
 from Utils.Verbose import verbose_print
 
 

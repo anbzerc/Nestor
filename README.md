@@ -53,3 +53,5 @@ Pour le repo des plugins :
 - https://github.com/Ant-Brain/EfficientWord-Net
 
 
+### DOCS :
+https://nitratine.net/blog/post/python-threading-basics/

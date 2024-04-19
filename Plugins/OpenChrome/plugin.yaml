@@ -1,6 +1,0 @@
-plugin: OpenDeezer
-author: Anbzerc
-params:
-  category: ouvrir un logiciel
-  alias: Chrome, chrome, chromium
-  target: Chrome
