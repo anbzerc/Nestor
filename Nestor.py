@@ -10,6 +10,7 @@ from queue import Queue
 from time import sleep
 from sys import platform
 
+from Utils import Colors
 from PluginControl import PluginControl
 from Utils.ActionParser import action_parser, get_plugins_litterals
 from Utils.Verbose import verbose_print
@@ -40,7 +41,9 @@ def main():
     # Set verbose bolean
     if not args.verbose:
         is_verbose = True
-        print("Verbose mode")
+
+        # We use our home-made classe to color the messages
+        print(Colors.info_message("\nVerbose mode"))
     else:
         is_verbose = False
     # The last time a recording was retrieved from the queue.
@@ -71,7 +74,7 @@ def main():
                     source = sr.Microphone(sample_rate=16000, device_index=index)
                     break
     else:
-        source = sr.Microphone(sample_rate=16000)
+        source = sr.Microphone(sample_rate=16000, device_index=11)
 
     #
     # Load proper model
@@ -93,9 +96,9 @@ def main():
     # Variable which contain Nestor folder absolute path
     root_path = base_path = str(pathlib.Path().absolute()).split("Nestor")[0] + "Nestor"
 
-
-    with source:
-        recorder.adjust_for_ambient_noise(source, 2)
+    # Calibrate Microphone
+    #with source:
+    #    recorder.adjust_for_ambient_noise(source, 2)
 
     #
     # Queues
@@ -112,6 +115,8 @@ def main():
     #   Set an instance of our PluginControl class
     #
     PluginControlInstance = PluginControl()
+    # And load plugins
+    PluginControlInstance.load_plugins(is_verbose)
 
     # callback funtion which will add audio to queue
     def record_callback(_, audio: sr.AudioData) -> None:
@@ -127,7 +132,7 @@ def main():
     # We could do this manually but SpeechRecognizer provides a nice helper.
     recorder.listen_in_background(source, record_callback, phrase_time_limit=record_timeout)
 
-    print("Model loaded.\n")
+    print("Nestor ready.\n")
 
     #
     # Main loop
@@ -164,7 +169,7 @@ def main():
                 transcription_end_time = datetime.utcnow()
                 transcription_duration = transcription_end_time - transcription_start_time
 
-                verbose_print(is_verbose, "Transcription en {} : {}".format(transcription_duration, text))
+                verbose_print(is_verbose, Colors.message_detected(transcription_duration, text))
 
                 # Add text to our transcription list
                 transcription.append(text)
@@ -185,28 +190,19 @@ def main():
 
                         parsing_end_time = datetime.utcnow()
                         parsing_duration = parsing_end_time - parsing_start_time
-                        verbose_print(is_verbose, f"Model ran in {parsing_duration} s")
 
                         # Check if action parsing was successful
                         if action_parsed["state"]:
-                            # Print return in verbose TODO use pprint
-                            verbose_print(is_verbose,
-                                          f'''Message : {action_parsed["input"]} \n transcription duration : {transcription_duration}
-                                          \t model processing duration : {parsing_duration} 
-                                          \n action : {action_parsed["action"]} 
-                                          target : {action_parsed["target"]}
-                                          \n\n
-                                          ''')
 
                             # get the parsed name of the plugin to run
-                            name = action_parsed["name"]
+                            name = action_parsed["plugin"]
 
                             # Check if this name is not None
 
                             if name is not None:
 
                                 # and if so, we call the proper plugin, in a thread because we didn't get the end word 'merci Nestor'
-
+                                verbose_print(is_verbose, Colors.action_detected(parsing_duration, name))
                                 plugin = PluginControlInstance.get_plugin_by_name(name)
                                 must_continue.put(True)
                                 # Clear text data queue and must_continue queue and
@@ -218,7 +214,7 @@ def main():
                                 must_continue.put(True)
 
                                 # Set the thread in which the plugin will run
-                                thread = Thread(target=plugin.run, args=(must_continue, data_queue))
+                                thread = Thread(target=plugin.run, args=(must_continue, text_data))
                                 # Then start the thread
                                 thread.start()
 
@@ -227,7 +223,7 @@ def main():
                                 # and while the last element of must_continue queue is True (when the plugin end,
                                 # it add False to this queue)
                                 #
-
+                                print(Colors.info_message("Plugin loop started"))
                                 while must_continue.queue[-1]:
 
                                     # sleep for processor
@@ -257,33 +253,27 @@ def main():
                                         transcription_end_time = datetime.utcnow()
                                         transcription_duration = transcription_end_time - transcription_start_time
 
-                                        verbose_print(is_verbose,
-                                                      "Trasncription en {} : {}".format(transcription_duration, text))
+                                        verbose_print(is_verbose, Colors.message_detected(transcription_duration, text))
 
                                         transcription.append(text)
 
                                         # Check if there's not 'merci nestor' in transcription
                                         if "merci nestor" in text.lower():
                                             # If so we put the transcription in queue and break the loop
-                                            data_queue.put(text.lower().split("merci nestor")[0] + "merci nestor")
+                                            text_data.put(text.lower().split("merci nestor")[0] + "merci nestor")
                                             break
-                                        else :
+                                        else:
                                             # Add these data to data queue to give them to the plugin in its thread and iterate pne more time
-                                            data_queue.put(text)
-
+                                            text_data.put(text)
+                                print(Colors.info_message("Plugin loop ended"))
 
                             # If action is None, display a proper message
                             else:
-                                print(
-                                    f'''Message : {action_parsed["input"]} \n transcription duration : {transcription_duration}
-                                          \t model processing duration : {parsing_duration} 
-                                          \n action : {action_parsed["action"]} 
-                                          target : 033[1;31m Not found
-                                          \n\n
-                                          ''')
+                                print(Colors.parsing_error(parsing_duration, action_parsed["name"]))
+
                         # If action parsing's state is False, print Error message
                         else:
-                            print("\n \033[1;31m Error during parsing : {} \n".format(action_parsed["input"]))
+                            print(Colors.parsing_error(parsing_duration, action_parsed["input"]))
 
                     # If there's "merci nestor" in user input, we will parse action, etc, only one time
                     # and we give the text before "merci nestor"
@@ -294,32 +284,25 @@ def main():
                         action_parsed = action_parser(text.lower().split("merci nestor")[0] + "merci nestor", root_path)
                         parsing_end_time = datetime.utcnow()
                         parsing_duration = parsing_end_time - parsing_start_time
-                        verbose_print(is_verbose, f"Model en {parsing_duration}")
 
                         if action_parsed[0]:
                             # Get plugin name in action parser's return
-                            name = action_parsed["name"]
+                            name = action_parsed["plugin"]
 
                             # Get an instance of this plugin
                             plugin = PluginControlInstance.get_plugin_by_name(name)
 
                             # And execute run() method of the plugin in a thread
-                            thread = Thread(plugin.run(text))
+                            thread = Thread(plugin.run(text, ))
                             # Launch thread
                             thread.start()
                             # Print return in verbose
-                            verbose_print(is_verbose,
-                                          "Message : {} \n transcription duration : {}\t model processing duration : {} \n action : {} target : {}\n\n".format(
-                                              action_parsed[1],
-                                              transcription_duration,
-                                              parsing_duration,
-                                              action_parsed[2],
-                                              action_parsed[3]
-                                          ))
+
+                            verbose_print(is_verbose, Colors.action_detected(parsing_duration, name))
                         else:
-                            print("\n Error during parsing : {} \n".format(action_parsed[1]))
+                            print(Colors.parsing_error(parsing_duration, action_parsed["plugin"]))
                 else:
-                    verbose_print(is_verbose, f"Not for Nestor : {text}")
+                    verbose_print(is_verbose, Colors.not_for_nestor(transcription_duration, text))
 
             # If the audio data queue is empty, sleep a bit and restart
             else:

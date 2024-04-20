@@ -17,13 +17,16 @@ class PluginControl():
 
     # Method which load plugins and write their informations into actions.json
     def load_plugins(self, is_verbose: bool):
-
+        """
+        Method which load all plugins in Plugins/ folder
+        :param is_verbose: boolean to print verbose or not
+        :return:
+        """
         # Load plugin
 
         for _, name, _ in self.iter_namespace(Plugins):
             # parcours le package plugin pour importer les modules (importe le __init__.py)
             # ça execute à chaque import tout le __init__.py
-            verbose_print(name)
             self.plugins.append(importlib.import_module(name))
 
         # Then get and write infos
