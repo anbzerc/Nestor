@@ -94,7 +94,7 @@ def main():
     # Blank variable which will contain the transcription
     transcription = ['']
     # Variable which contain Nestor folder absolute path
-    root_path = base_path = str(pathlib.Path().absolute()).split("Nestor")[0] + "Nestor"
+    root_path = str(pathlib.Path().absolute()).split("Nestor")[0] + "Nestor"
 
     # Calibrate Microphone
     #with source:
@@ -132,7 +132,7 @@ def main():
     # We could do this manually but SpeechRecognizer provides a nice helper.
     recorder.listen_in_background(source, record_callback, phrase_time_limit=record_timeout)
 
-    print("Nestor ready.\n")
+    print(Colors.info_message("Nestor ready.\n"))
 
     #
     # Main loop
@@ -204,7 +204,7 @@ def main():
                                 # and if so, we call the proper plugin, in a thread because we didn't get the end word 'merci Nestor'
                                 verbose_print(is_verbose, Colors.action_detected(parsing_duration, name))
                                 plugin = PluginControlInstance.get_plugin_by_name(name)
-                                must_continue.put(True)
+
                                 # Clear text data queue and must_continue queue and
                                 # push the first data in text data queue and True in must continue queue
                                 text_data.queue.clear()

@@ -27,7 +27,7 @@ def load_plugins():
 
 
 def get_plugins_list():
-    g = Github("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")
+    g = Github()
     repo = g.get_repo("anbzerc/Nestor-plugins")
     file = repo.get_contents("index.json")
     return json.loads(file.decoded_content)
@@ -70,7 +70,7 @@ def download_directory(repository, server_path, name, root_path, is_folder=False
 
 
 def download_plugin(name, root_path):
-    g = Github("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")
+    g = Github()
     repo = g.get_repo("anbzerc/Nestor-plugins")
     path = f"Plugins/{name}"
     if not is_plugin_installed(name, root_path):
