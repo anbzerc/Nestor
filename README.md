@@ -8,7 +8,7 @@ Then download a zip in releases and run
 ```python3 Nestor.py```
 
 ### Actions 
-This repository contains only the core of Nestor. To install actions, run python3 Api/app.py, then go to http://127.0.0.1:5000 and navigate to the plugins tab. The plugins are located in the repository https://github.com/anbzerc/Nestor-plugins. Feel free to contribute and add new actions.
+This repository contains only the core of Nestor. To install actions, run python3 Flask/app.py, then go to http://127.0.0.1:5000 and navigate to the plugins tab. The plugins are located in the repository https://github.com/anbzerc/Nestor-plugins. Feel free to contribute and add new actions.
 
 ### Contributing to the core
 #### Clone github repo
