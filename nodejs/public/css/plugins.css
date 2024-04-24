@@ -1,0 +1,196 @@
+@font-face {
+	font-family: 'Crimson Text';
+	src: url("../Fonts/Crimson_Text/CrimsonText-Regular.ttf") format("truetype");
+    font-weight: normal;
+    font-style: normal;
+}
+.WillBeHideItsJustToGetIconUrl {
+    display: none;
+}
+* {
+  margin: 0;
+  padding: 0;
+}
+.menu-icon {
+	position: absolute;
+  	top: 1%;
+  	left: 1.2%;
+  	transform: translate(-50%, -50%);
+    height : 24px;
+    width: 24px;
+    margin: 15px;
+  	transition: 0.1s linear;
+}
+
+.open-menu-icon {
+	position: absolute;
+  	top: 2%;
+  	left: 13%;
+  	transform: scaleX(-1) translate(-50%, -50%);
+  	transition: 0.1s linear;
+}
+
+.main {
+    display: flex;
+    flex-direction: row;
+}
+
+.sidebar{
+	width: 0px;
+	height: 100%;
+	overflow: hidden;
+  	transition: 0.1s linear;
+}
+.open-sidebar {
+	width: 15%;
+	height: 100%;
+	transition: 0.2s linear;
+}
+
+
+.grid-container {
+	height: 100%;
+	display: flex;
+	flex-direction: column;
+	flex-grow: 1;
+
+}
+.content {
+    display: grid;
+    justify-content: center;
+    max-width: 2000px;
+}
+.navbar {
+	width: 100%;
+	height: 50px;
+}
+
+.TopLogo{
+	width: 100%
+}
+.Plugins {
+	margin-top: 2%;
+	width: 100%;
+	height: 5%;
+	background-color: gray;
+}
+.PluginsText {
+    font-family: "Crimson Text", serif;
+    font-size: 25px;
+}
+.Settings {
+	width: 100%;
+	height: 5%;
+	background-color: gray;
+}
+.SettingsText {
+    font-family: "Crimson Text", serif;
+    font-size: 25px;
+}
+.card {
+    max-width: 400px;
+    height: 146px;
+    border-radius: 10px;
+    background-color: #F5F5F5;
+    display: grid;
+    grid-template-rows: 60% 40%;
+    box-shadow: 0px 1px 2px -27px #B0B0B0;
+
+}
+.firstrow {
+    height: 100%;
+    width: 100%;
+    display: grid;
+    grid-template-columns: 60% 40%;
+}
+.firstcolumn {
+    display: grid;
+    align-content: center;
+    justify-content: start;
+}
+.Title{
+    height: 20px;
+    font-family: "Crimson Text", serif;
+    font-size: 25px;
+    margin-left: 15px;
+    margin-bottom: 14px;
+}
+.Author {
+    height: 20px;
+    font-family: "Crimson Text", serif;
+    font-size: 15px;
+    margin-bottom: 1px;
+    margin-left: 15px;
+    color: #4E4B4B;
+    opacity: 83%;
+}
+.updated {
+    height: 20px;
+    font-family: "Crimson Text", serif;
+    font-size: 15px;
+    margin-left: 15px;
+    color: #4E4B4B;
+    opacity: 83%;
+}
+.secondcolumn{
+    display: grid;
+    justify-content: end;
+}
+.install {
+    height : 25px;
+    width: 25px;
+    margin: 10px;
+    margin-top: 15px;
+    margin-right: 15px;
+}
+.description {
+    height: 20px;
+    font-family: "Crimson Text", serif;
+    font-size: 15px;
+    margin-left: 15px;
+}
+.secondrow {
+    display: grid;
+    justify-content: start;
+
+}
+@media only screen and (max-width: 600px) {
+    .card {
+        background-color: red;
+    }
+    }
+@media (min-width: 1100px) {
+    .content {
+        grid-template-columns: 20% 20% 20% 20%;
+        grid-auto-rows: 146px;
+        column-gap: 20px;
+        row-gap: 20px;
+    }
+}
+
+@media (min-width: 1000px) and (max-width: 1250px){
+    .content {
+        grid-template-columns: 26.3% 26.3% 26.3%;
+        grid-auto-rows: 146px;
+        column-gap: 20px;
+        row-gap: 20px;
+    }
+}
+
+@media (min-width: 700px) and (max-width: 1000px){
+    .content {
+        grid-template-columns: 40% 40%;
+        grid-auto-rows: 146px;
+        column-gap: 30px;
+        row-gap: 30px;
+    }
+}
+
+@media (max-width: 700px) {
+    .content {
+        grid-template-columns: 80%;
+        grid-auto-rows: 146px;
+        column-gap: 30px;
+        row-gap: 30px;
+    }
+}

@@ -1,0 +1,83 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>Real-time Audio Energy Display</title>
+</head>
+<body>
+  <button id="recordButton">Record Audio</button>
+  <div id="energyDisplay"></div>
+
+  <script>
+    let isRecording = false;
+    let audioContext;
+    let analyserNode;
+    let dataArray;
+    let energyDisplay;
+    let prevEnergy;
+    let energyDropCount = 0;
+    const dropThreshold = 20; // Energy drop threshold
+    const updateInterval = 100; // Update energy every 100 milliseconds
+
+    function startRecording() {
+      navigator.mediaDevices.getUserMedia({ audio: true })
+        .then(stream => {
+          audioContext = new (window.AudioContext || window.webkitAudioContext)();
+          analyserNode = audioContext.createAnalyser();
+          analyserNode.fftSize = 256;
+          dataArray = new Uint8Array(analyserNode.frequencyBinCount);
+          
+          energyDisplay = document.getElementById('energyDisplay');
+          prevEnergy = 0;
+
+          const sourceNode = audioContext.createMediaStreamSource(stream);
+          sourceNode.connect(analyserNode);
+
+          isRecording = true;
+          updateEnergy();
+        })
+        .catch(error => {
+          console.error('Error accessing microphone:', error);
+        });
+    }
+
+    function updateEnergy() {
+      if (!isRecording) {
+        return;
+      }
+
+      analyserNode.getByteFrequencyData(dataArray);
+
+      let energy = 0;
+      for (let i = 0; i < dataArray.length; i++) {
+        energy += dataArray[i] ** 2;
+      }
+      energy /= dataArray.length;
+      energyDisplay.textContent = 'Energy: ' + energy.toFixed(2);
+
+      if (prevEnergy - energy > dropThreshold) {
+        energyDropCount++;
+      } else {
+        energyDropCount = 0;
+      }
+
+      if (energyDropCount >= 10) { // 10 updates * 100 milliseconds = 1 second
+        stopRecording();
+        console.log('Recording stopped due to energy drop.');
+        return;
+      }
+
+      prevEnergy = energy;
+      setTimeout(updateEnergy, updateInterval);
+    }
+
+    function stopRecording() {
+      isRecording = false;
+      audioContext.close().then(() => {
+        audioContext = null;
+      });
+    }
+
+    document.getElementById('recordButton').addEventListener('click', startRecording);
+  </script>
+</body>
+</html>

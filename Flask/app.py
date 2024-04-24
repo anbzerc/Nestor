@@ -2,8 +2,10 @@ import json
 import subprocess
 from threading import Thread
 
+import flask
 from flask import Flask, render_template, request
 import sys
+from flask_cors import cross_origin
 
 sys.path.append('../Nestor/')
 from Api.Plugins import *
@@ -24,11 +26,12 @@ def main():
 
 
     @app.route('/api/list', methods=['GET'])
+    @cross_origin()
     def api_get_plugins_list():
         return get_plugins_list()
 
-
     @app.route('/api/plugins/install', methods=['POST'])
+    @cross_origin()
     def install_plugin_api():
         response_json = request.get_json(force=True)
         name = response_json["name"]
@@ -38,6 +41,7 @@ def main():
 
 
     @app.route('/api/plugins/remove', methods=['POST'])
+    @cross_origin()
     def remove_plugin_api():
         response_json = request.get_json(force=True)
         name = response_json["name"]
@@ -47,6 +51,7 @@ def main():
 
 
     @app.route('/api/plugins/list', methods=['GET'])
+    @cross_origin()
     def get_installed_plugin_list():
         return json.dumps(list_installed_plugins(root_path))
 
