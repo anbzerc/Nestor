@@ -13,7 +13,11 @@ npm install express cors @tensorflow/tfjs @tensorflow-models/speech-commands
 ```
 ### Actions 
 This repository contains only the core of Nestor. To install actions, run python3 Flask/app.py, then go to http://127.0.0.1:5000 and navigate to the plugins tab. The plugins are located in the repository https://github.com/anbzerc/Nestor-plugins. Feel free to contribute and add new actions.
-
+### Models list :
+-  bofenghuang's whisper-large-v3-french-distil
+-  bofenghuang's whisper-large-v3-french-distil-dec16
+-  whisper small
+-  whisper medium
 ### Contributing to the core
 #### Clone github repo
 ```git clone https://github.com/anbzerc/Nestor.git ...```

@@ -1,4 +1,5 @@
 import json
+import queue
 import subprocess
 from threading import Thread
 
@@ -6,6 +7,8 @@ import flask
 from flask import Flask, render_template, request
 import sys
 from flask_cors import cross_origin
+
+from Nestor import Nestor
 
 sys.path.append('../Nestor/')
 from Api.Plugins import *
@@ -15,6 +18,15 @@ def main():
 
     root_path=str(pathlib.Path().absolute()).replace("/Flask", "")
 
+    # Set audio datas queues
+    audio_data_queues = queue.Queue()
+
+    # Set model
+    model = "whisper-large-v3-french"
+    # Get an instance of Nestor in a thread
+    nestor = Nestor(audio_data_queues, model=model)
+    nestor_thread = Thread(nestor.main())
+    nestor_thread.start()
     @app.route("/")
     def hello_world():
         return render_template('main.html')
@@ -55,6 +67,11 @@ def main():
     def get_installed_plugin_list():
         return json.dumps(list_installed_plugins(root_path))
 
+    @app.route('/api/nestor/audio', methods=['POST'])
+    @cross_origin()
+    def get_analyze_audio():
+        return ""
+        # TODO addaudio to audio_data_queues
     # Launch app
     app.run()
 

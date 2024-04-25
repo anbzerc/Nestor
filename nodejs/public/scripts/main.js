@@ -125,7 +125,7 @@ async function recordAudio() {
         const formData = new FormData();
         formData.append('audio', blob, 'recordedAudio.wav');
 
-        fetch('http://your-backend-url/upload', {
+        fetch('http://127.0.0.1:5000/nestor/audio', {
           method: 'POST',
           body: formData
         })
