@@ -90,14 +90,12 @@ async function recordAudio() {
     let startTime;
     let endTime;
 
-    let recorder
-
     navigator.mediaDevices.getUserMedia({
             audio: true
         })
         .then(stream => {
             startTime = Date.now()
-
+            
             audioContext = new(window.AudioContext || window.webkitAudioContext)();
             analyserNode = audioContext.createAnalyser();
             analyserNode.fftSize = 256;
@@ -107,16 +105,12 @@ async function recordAudio() {
 
             const sourceNode = audioContext.createMediaStreamSource(stream);
             sourceNode.connect(analyserNode);
-            recorder = new MediaRecorder(stream);
+
+            let recorder = new MediaRecorder(sourceNode.stream);
             recorder.ondataavailable = event => {
                 // Collect all the chunks of the recording in an array.
                 audioData.push(event.data);
             };
-            recorder.onstop = e => {
-                stopRecording()
-            }
-            recorder.start();
-            audioData = [];
             updateEnergy();
         })
         .catch(error => {
@@ -124,79 +118,80 @@ async function recordAudio() {
         });
 
 
+    function updateEnergy() {
+        if (!isListening) {
+            return;
+        }
+
+        analyserNode.getByteFrequencyData(dataArray);
+
+        let energy = 0;
+        for (let i = 0; i < dataArray.length; i++) {
+            energy += dataArray[i] ** 2;
+        }
+        energy /= dataArray.length;
+        EnergyList.push(energy)
+        console.log('Energy: ' + energy.toFixed(2) + "Average since start : " + numAverage(EnergyList));
 
 
-    function stopRecording() {
-        endTime = Date.now()
 
-        console.log('Recording stopped due to energy drop.');
-        if (endTime - startTime < 1.5)
-        {
-            console.log("Too short to send")
-            isListening=false
-            audioData = []
+        if (prevEnergy - energy > dropThreshold) {
+            energyDropCount++;
+        } else {
+            energyDropCount = 0;
+        }
+
+        if (energyDropCount >= 10) { // 10 updates * 100 milliseconds = 1 second
+            stopRecording();
+            return;
+        }
+        // Check if the average energy in the last roughly 0.5 second isn't too low
+        if (EnergyList.length>7 && numAverage(EnergyList) < 1000) {
+            console.log("Energy too low, stop recording")
+            stopRecording();
             return
         }
-        console.log("Send")
+        prevEnergy = energy;
+        setTimeout(updateEnergy, updateInterval);
+    }
+
+    function stopRecording() {
+        console.log('Recording stopped due to energy drop.');
         isListening = false;
-        const blob = new Blob(audioData, { type: "audio/wav" });
-        const audio = document.getElementById('tim')
-        audioData = [];
-        const audioURL = window.URL.createObjectURL(blob);
-        audio.src = audioURL;
 
-        const formData = new FormData();
-        formData.append('audio', blob, 'recordedAudio.wav');
+        // save end time
+        endTime = Date.now()
+        console.log(audioData)
+        // check if audio's duration isn't too short
 
-        fetch('http://127.0.0.1:5000/api/nestor/audio', {
-        method: 'POST',
-        body: formData
-        })
+        if (endTime - startTime < 1000) {
+            audioContext.close()
+            console.log("Too short to send, probably false alert")
+            return
+        }
+        audioContext.close().then(() => {
+            audioContext = null;
+
+            const blob = new Blob(audioData, {
+                type: 'audio/wav'
+            });
+            const formData = new FormData();
+            formData.append('audio', blob);
+
+            fetch('http://127.0.0.1:5000/api/nestor/audio', {
+                    method: 'POST',
+                    body: formData
+                })
+                .then(response => response.json())
+                .then(data => {
+                    console.log('Audio uploaded:', data);
+                })
+                .catch(error => {
+                    console.error('Error uploading audio:', error);
+                });
+        });
     }
-
-
-function updateEnergy() {
-    if (!isListening) {
-        return;
-    }
-
-    analyserNode.getByteFrequencyData(dataArray);
-
-    let energy = 0;
-    for (let i = 0; i < dataArray.length; i++) {
-        energy += dataArray[i] ** 2;
-    }
-    energy /= dataArray.length;
-    EnergyList.push(energy)
-    console.log('Energy: ' + energy.toFixed(2) + "Average since start : " + numAverage(EnergyList));
-    //audioData.push(new Uint8Array(dataArray));
-
-
-    if (prevEnergy - energy > dropThreshold) {
-        energyDropCount++;
-    } else {
-        energyDropCount = 0;
-    }
-
-    if (energyDropCount >= 10) { // 10 updates * 100 milliseconds = 1 second
-        recorder.stop()
-
-        return;
-    }
-    // Check if the average energy in the last roughly 0.5 second isn't too low
-    // prevent from ghost
-    if (EnergyList.length>7 && numAverage(EnergyList) < 1000) {
-        console.log("Energy too low, stop recording")
-        recorder.stop()
-
-        return
-    }
-    prevEnergy = energy;
-    setTimeout(updateEnergy, updateInterval);
 }
-}
-
-
 
 
 startListening();

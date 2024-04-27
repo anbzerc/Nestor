@@ -1,11 +1,9 @@
-import json
 import queue
-import subprocess
+import sys
 from threading import Thread
 
-import flask
+from faster_whisper import WhisperModel
 from flask import Flask, render_template, request
-import sys
 from flask_cors import cross_origin
 
 from Nestor import Nestor
@@ -16,16 +14,17 @@ from Api.Plugins import *
 def main():
     app = Flask(__name__)
 
-    root_path=str(pathlib.Path().absolute()).replace("/Flask", "")
+    root_path = str(pathlib.Path().absolute()).replace("/Flask", "")
 
     # Set audio datas queues
     audio_data_queues = queue.Queue()
 
     # Set model
-    model = "whisper-large-v3-french"
+    #model = "whisper-large-v3-french"
+    model = "small"
     # Get an instance of Nestor in a thread
     nestor = Nestor(audio_data_queues, model=model)
-    nestor_thread = Thread(nestor.main())
+    nestor_thread = Thread(target=nestor.main)
     nestor_thread.start()
     @app.route("/")
     def hello_world():
@@ -69,11 +68,25 @@ def main():
 
     @app.route('/api/nestor/audio', methods=['POST'])
     @cross_origin()
-    def get_analyze_audio():
-        return ""
-        # TODO addaudio to audio_data_queues
+    def get_analyzed_audio():
+        # Grab audio file in the request
+        data = request.files['audio']
+        saving_path = root_path+"/"+data.filename
+        print("Saving to ", saving_path)
+        data.save(saving_path)
+        transcribe(saving_path)
+        # then add datas to audio_data_queue
+        #Thread(target=transcribe, args=(root_path+"/temp.wav",)).start()
+        return "true"
     # Launch app
     app.run()
-
+def transcribe(audio_file):
+    audio_model = WhisperModel("small", device="cuda")
+    result, index = audio_model.transcribe(audio_file)
+    text_tmp=''
+    for segment in result:
+        text_tmp += segment.text
+    text = text_tmp.strip()
+    print(text)
 if __name__ == '__main__':
     main()

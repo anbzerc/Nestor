@@ -13,14 +13,14 @@ app.use(cors({
 
 // Servez les fichiers statiques depuis le dossier 'public'
 app.use(express.static('public'));
-app.get('/', function(req, res) {
-  res.sendFile(path.join(__dirname, '/public/main.html'));
-});
+
 app.get('*', (req, res) => {
     res.status(404).send('Page non trouvée');
 });
+app.get('/', (req, res) => {
+    res.sendFile(path.join(__dirname, '/index.html'))
+});
 app.listen(PORT, () => {
-    
     console.log(`Serveur démarré sur http://localhost:${PORT}`);
 });
 

@@ -18,8 +18,15 @@ This repository contains only the core of Nestor. To install actions, run python
 ### Models list :
 -  bofenghuang's whisper-large-v3-french-distil
 -  bofenghuang's whisper-large-v3-french-distil-dec16
--  whisper small
--  whisper medium
+
+Faster whisper models 
+-  tiny
+-  base
+-  small
+-  medium
+-  large-v3
+-  distil-large-v2
+
 ### Contributing to the core
 #### Clone github repo
 ```git clone https://github.com/anbzerc/Nestor.git ...```

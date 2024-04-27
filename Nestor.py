@@ -22,6 +22,14 @@ class Nestor ():
         :param audio_data_queue: a queue in which the audio data from the node frontend will be added
         """
         #
+        #   Set an instance of our PluginControl class
+        #
+
+        self.PluginControlInstance = PluginControl()
+        # And load plugins
+
+        self.PluginControlInstance.load_plugins(True)
+        #
         # Queues
         #
 
@@ -50,14 +58,6 @@ class Nestor ():
         transcription = ['']
         # Variable which contain Nestor folder absolute path
         root_path = str(pathlib.Path().absolute()).split("Nestor")[0] + "Nestor"
-
-        #
-        #   Set an instance of our PluginControl class
-        #
-        PluginControlInstance = PluginControl()
-        # And load plugins
-        PluginControlInstance.load_plugins(is_verbose)
-
 
         print(Colors.info_message("Nestor ready.\n"))
 
@@ -130,7 +130,7 @@ class Nestor ():
 
                                     # and if so, we call the proper plugin, in a thread because we didn't get the end word 'merci Nestor'
                                     verbose_print(is_verbose, Colors.action_detected(parsing_duration, name))
-                                    plugin = PluginControlInstance.get_plugin_by_name(name)
+                                    plugin = self.PluginControlInstance.get_plugin_by_name(name)
 
                                     # Clear text data queue and must_continue queue and
                                     # push the first data in text data queue and True in must continue queue
@@ -217,7 +217,7 @@ class Nestor ():
                                 name = action_parsed["plugin"]
 
                                 # Get an instance of this plugin
-                                plugin = PluginControlInstance.get_plugin_by_name(name)
+                                plugin = self.PluginControlInstance.get_plugin_by_name(name)
 
                                 # And execute run() method of the plugin in a thread
                                 thread = Thread(plugin.run(text, ))

@@ -118,7 +118,7 @@ def main():
     # And load plugins
     PluginControlInstance.load_plugins(is_verbose)
 
-    # callback funtion which will add audio to queue
+    # callback function which will add audio to queue
     def record_callback(_, audio: sr.AudioData) -> None:
         """
         Threaded callback function to receive audio data when recordings finish.
