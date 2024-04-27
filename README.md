@@ -3,9 +3,11 @@ Nestor is a real-time voice assistant
 ### Installation 
 #### Install python dependencies
 Install CUDA then
-```pip install numpy speech_recognition faster_whisper flask```
+```pip install numpy SpeechRecognition faster_whisper flask ollama```
 Then download a zip in releases and run
 ```python3 Nestor.py```
+### Install Ollama
+follow instruction here : 
 ### Install nodejs dependecies
 ``` 
 cd nodejs/
