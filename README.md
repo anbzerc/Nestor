@@ -11,7 +11,7 @@ follow instruction here :
 ### Install nodejs dependecies
 ``` 
 cd nodejs/
-npm install express cors @tensorflow/tfjs @tensorflow-models/speech-commands
+npm install express cors @tensorflow/tfjs @tensorflow-models/speech-commands gsap
 ```
 ### Actions 
 This repository contains only the core of Nestor. To install actions, run python3 Flask/app.py, then go to http://127.0.0.1:5000 and navigate to the plugins tab. The plugins are located in the repository https://github.com/anbzerc/Nestor-plugins. Feel free to contribute and add new actions.
