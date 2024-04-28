@@ -40,7 +40,8 @@ See https://github.com/anbzerc/Nestor-plugins
   
 ### Inspired by :
 - https://github.com/davabase/whisper_real_time
-
+# TODO
+- [ ] visializeer https://github.com/samhirtarif/react-audio-visualize/blob/master/src/LiveAudioVisualizer/LiveAudioVisualizer.tsx
 ### License :
 CC BY-NC 4.0 LEGAL CODE
 Attribution-NonCommercial 4.0 International

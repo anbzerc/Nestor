@@ -1,3 +1,4 @@
+import io
 import queue
 import sys
 from threading import Thread
@@ -6,9 +7,10 @@ from faster_whisper import WhisperModel
 from flask import Flask, render_template, request
 from flask_cors import cross_origin
 
-from Nestor import Nestor
+
 
 sys.path.append('../Nestor/')
+from Nestor import Nestor
 from Api.Plugins import *
 
 def main():
@@ -74,15 +76,17 @@ def main():
         saving_path = root_path+"/"+data.filename
         print("Saving to ", saving_path)
         data.save(saving_path)
-        transcribe(saving_path)
+        audio_data_queues.put(saving_path)
         # then add datas to audio_data_queue
         #Thread(target=transcribe, args=(root_path+"/temp.wav",)).start()
         return "true"
     # Launch app
-    app.run()
+    app.run(debug=True)
+
+# Test function
 def transcribe(audio_file):
     audio_model = WhisperModel("small", device="cuda")
-    result, index = audio_model.transcribe(audio_file)
+    result, _ = audio_model.transcribe(audio_file)
     text_tmp=''
     for segment in result:
         text_tmp += segment.text

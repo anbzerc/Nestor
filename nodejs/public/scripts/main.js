@@ -185,7 +185,7 @@ function updateEnergy() {
     }
     // Check if the average energy in the last roughly 0.5 second isn't too low
     // prevent from ghost
-    if (EnergyList.length>7 && numAverage(EnergyList) < 1000) {
+    if (EnergyList.length>4 && numAverage(EnergyList) < 1000) {
         console.log("Energy too low, stop recording")
         recorder.stop()
 

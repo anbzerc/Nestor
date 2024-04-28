@@ -70,21 +70,12 @@ class Nestor ():
                 now = datetime.utcnow()
                 # Pull raw recorded audio from the queue.
                 if not self.data_queue.empty():
-                    # This is the last time we received new audio data from the queue.
-                    phrase_time = now
-
-                    # Combine audio data from queue
-                    audio_data = b''.join(self.data_queue.queue)
+                    # Get temp file path
+                    file_path = self.data_queue.queue[-1]
                     self.data_queue.queue.clear()
 
-                    # Convert in-ram buffer to something the model can use directly without needing a temp file.
-                    # Convert data from 16 bit wide integers to floating point with a width of 32 bits.
-                    # Clamp the audio stream frequency to a PCM wavelength compatible default of 32768hz max.
-                    audio_np = np.frombuffer(audio_data, dtype=np.int16).astype(np.float32) / 32768.0
-
-                    # Read the transcription and save its duration
                     transcription_start_time = datetime.utcnow()
-                    result, info = self.audio_model.transcribe(audio_np, language="fr", vad_filter=True)  # we set VAD filter on
+                    result, info = self.audio_model.transcribe(file_path, language="fr", vad_filter=True)  # we set VAD filter on
 
                     # Iterate in segment because it's FasterWhisper
                     text_tmp = ""
@@ -160,17 +151,13 @@ class Nestor ():
                                         # and we'll add transcribed text to text data queue
                                         if not self.data_queue.empty():
 
-                                            # This is the last time we received new audio data from the queue.
-                                            phrase_time = now
-                                            # same as above
-                                            audio_data = b''.join(self.data_queue.queue)
+                                            # Get temp file path
+                                            file_path = self.data_queue.queue[-1]
                                             self.data_queue.queue.clear()
-                                            audio_np = np.frombuffer(audio_data, dtype=np.int16).astype(
-                                                np.float32) / 32768.0
 
                                             # Read the transcription and save its duration
                                             transcription_start_time = datetime.utcnow()
-                                            result, info = self.audio_model.transcribe(audio_np, language="fr")
+                                            result, info = self.audio_model.transcribe(file_path, language="fr")
 
                                             # Iterate in segment because it's FasterWhisper
                                             text_tmp = ""

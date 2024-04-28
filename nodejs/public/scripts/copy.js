@@ -90,7 +90,7 @@ const CONFIG = {
     barWidth: 4,
     barMinHeight: 0.04,
     barMaxHeight: 0.8,
-    barGap: 2,
+    barGap: 10,
   }
   
   gsap.ticker.fps(CONFIG.fps)
@@ -107,12 +107,8 @@ const CONFIG = {
     CANVAS.width / 2,
     CANVAS.height
   )
-  // Color stop is three colors
-  fillStyle.addColorStop(0.2, 'hsl(10, 80%, 50%)')
-  fillStyle.addColorStop(0.8, 'hsl(10, 80%, 50%)')
-  fillStyle.addColorStop(0.5, 'hsl(120, 80%, 50%)')
   
-  DRAWING_CONTEXT.fillStyle = fillStyle
+  DRAWING_CONTEXT.fillStyle = 'black'
   
   const drawBar = ({ x, size }) => {
     const POINT_X = x - CONFIG.barWidth / 2
@@ -128,7 +124,13 @@ const CONFIG = {
   }
   
   
-  
+  const VIZ_CONFIG = {
+    bar: {
+      width: 4,
+      min_height: 0.04,
+      max_height: 0.8
+    }
+  }
   
 
   // END of VIZUALIZER's declaration
@@ -176,6 +178,7 @@ async function recordAudio() {
             }
             recorder.start();
             audioData = [];
+            timeline.play()
             updateEnergy();
         })
         .catch(error => {
@@ -187,7 +190,14 @@ async function recordAudio() {
 
     function stopRecording() {
         endTime = Date.now()
-
+        // Pause the timeline
+        timeline.pause()
+        // Animate the playhead back to the START_POINT
+        gsap.to(timeline, {
+            onComplete: () => {
+            gsap.ticker.remove(REPORT)
+            }
+        })
         console.log('Recording stopped due to energy drop.');
         if (endTime - startTime < 1.5)
         {
@@ -256,31 +266,39 @@ function updateEnergy() {
     // Vizualizer
     REPORT = () => {
         if (recorder) {
-          const VOLUME = Math.floor((Math.max(...dataArray) / 255) * 100)
-          
-          // At this point create a bar and have it added to the timeline
-          const BAR = {
+            
+        const VOLUME = Math.floor((Math.max(...dataArray) / 255) * 100)
+        
+        // At this point create a bar and have it added to the timeline
+        const BAR = {
             x: CANVAS.width + CONFIG.barWidth / 2,
             size: gsap.utils.mapRange(0, 100, CANVAS.height * CONFIG.barMinHeight, CANVAS.height * CONFIG.barMaxHeight)(VOLUME)
-          }
-          // Add to bars Array       
-          BARS.push(BAR)
-          // Add the bar animation to the timeline
-          // The actual pixels per second is (1 / fps * shift) * fps
-          // if we have 50fps, the bar needs to have moved bar width before the next comes in
-          // 1/50 = 4 === 50 * 4 = 200
-          timeline
+        }
+        // Add to bars Array       
+        BARS.push(BAR)
+        // Add the bar animation to the timeline
+        // The actual pixels per second is (1 / fps * shift) * fps
+        // if we have 50fps, the bar needs to have moved bar width before the next comes in
+        // 1/50 = 4 === 50 * 4 = 200
+        timeline
             .to(BAR, {
-              x: `-=${CANVAS.width + CONFIG.barWidth}`,
-              ease: 'none',
-              duration: CANVAS.width / ((CONFIG.barWidth + CONFIG.barGap) * CONFIG.fps),
-            }, BARS.length * (1 / CONFIG.fps))
-        }
-        if (recorder || visualizing) {
-          drawBars()
-        }
-      }
-      gsap.ticker.add(REPORT)
+            x: `-=${CANVAS.width + CONFIG.barWidth}`,
+            ease: 'none',
+            duration: CANVAS.width / ((CONFIG.barWidth + CONFIG.barGap) * CONFIG.fps),
+            onComplete: () => {
+                // Retirer la barre de la liste lorsque l'animation est terminée
+                const index = BARS.indexOf(BAR);
+                if (index !== -1) {
+                BARS.splice(index, 1);
+                }
+            }
+        }, BARS.length * (1 / CONFIG.fps))
+    }
+    if (recorder || visualizing) {
+      drawBars()
+    }
+  }
+    gsap.ticker.add(REPORT)
       
     setTimeout(updateEnergy, updateInterval);
 }
