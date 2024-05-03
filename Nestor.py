@@ -15,7 +15,8 @@ from PluginControl import PluginControl
 from Utils.ActionParser import action_parser, get_plugins_litterals
 from Utils.Verbose import verbose_print
 
-class Nestor ():
+
+class Nestor():
     def __init__(self, audio_data_queue: Queue, model: str):
         """
         init constructor for Nestor instance
@@ -39,15 +40,16 @@ class Nestor ():
         # One queue to check if we continue another for the text data
         self.must_continue = Queue()
         self.text_data = Queue()
-        if model == "whisper-large-v3-french" :
+        if model == "whisper-large-v3-french":
             self.audio_model = WhisperModel("./models/whisper-large-v3-french/ctranslate2", device="cuda")
         elif model == "whisper-large-v3-french-distil-dec16":
             self.audio_model = WhisperModel("./models/whisper-large-v3-french-distil-dec16/ctranslate2", device="cuda",
-                                       compute_type="float16")
+                                            compute_type="float16")
         elif model == "small":
             self.audio_model = WhisperModel("small", device="cuda")
         elif model == "medium":
             self.audio_model = WhisperModel("medium", device="cuda")
+
     def main(self):
         # Arguments parser
 
@@ -75,7 +77,9 @@ class Nestor ():
                     self.data_queue.queue.clear()
 
                     transcription_start_time = datetime.utcnow()
-                    result, info = self.audio_model.transcribe(file_path, language="fr", vad_filter=True)  # we set VAD filter on
+                    result, info = self.audio_model.transcribe(file_path, language="fr", vad_filter=True,
+                                                               vad_parameters=dict(
+                                                                   min_silence_duration_ms=400))  # we set VAD filter on
 
                     # Iterate in segment because it's FasterWhisper
                     text_tmp = ""
@@ -86,6 +90,10 @@ class Nestor ():
 
                     transcription_end_time = datetime.utcnow()
                     transcription_duration = transcription_end_time - transcription_start_time
+
+                    # Check if transcription is not None
+                    if text == '':
+                        continue  # if transcription is blank, do not process action_parser
 
                     verbose_print(is_verbose, Colors.message_detected(transcription_duration, text))
 
@@ -157,7 +165,9 @@ class Nestor ():
 
                                             # Read the transcription and save its duration
                                             transcription_start_time = datetime.utcnow()
-                                            result, info = self.audio_model.transcribe(file_path, language="fr")
+                                            result, info = self.audio_model.transcribe(file_path, language="fr", vad_filter=True,
+                                                               vad_parameters=dict(
+                                                                   min_silence_duration_ms=400))
 
                                             # Iterate in segment because it's FasterWhisper
                                             text_tmp = ""
@@ -167,14 +177,16 @@ class Nestor ():
                                             transcription_end_time = datetime.utcnow()
                                             transcription_duration = transcription_end_time - transcription_start_time
 
-                                            verbose_print(is_verbose, Colors.message_detected(transcription_duration, text))
+                                            verbose_print(is_verbose,
+                                                          Colors.message_detected(transcription_duration, text))
 
                                             transcription.append(text)
 
                                             # Check if there's not 'merci nestor' in transcription
                                             if "merci nestor" in text.lower():
                                                 # If so we put the transcription in queue and break the loop
-                                                self.text_data.put(text.lower().split("merci nestor")[0] + "merci nestor")
+                                                self.text_data.put(
+                                                    text.lower().split("merci nestor")[0] + "merci nestor")
                                                 break
                                             else:
                                                 # Add these data to data queue to give them to the plugin in its thread and iterate pne more time
@@ -195,7 +207,8 @@ class Nestor ():
                         else:
                             parsing_start_time = datetime.utcnow()
                             #parse action                 we split text by merci nestor, then select the part before merci nestor and add it for the plugin
-                            action_parsed = action_parser(text.lower().split("merci nestor")[0] + "merci nestor", root_path)
+                            action_parsed = action_parser(text.lower().split("merci nestor")[0] + "merci nestor",
+                                                          root_path)
                             parsing_end_time = datetime.utcnow()
                             parsing_duration = parsing_end_time - parsing_start_time
 
@@ -228,5 +241,3 @@ class Nestor ():
         print("\n\nTranscription:")
         for line in transcription:
             print(line)
-
-

@@ -43,7 +43,8 @@
 
 .grid-container {
 	height: 100%;
-	display: block;
+	width: 100%;
+	display: flex;
 }
 .navbar {
 	width: 100%;
@@ -82,4 +83,7 @@
 	height: 5%;
 	background-color: gray;
 	font-family: "Crimson Text", serif;
+}
+.chat {
+	background-color: red;
 }

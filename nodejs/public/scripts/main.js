@@ -1,6 +1,8 @@
 let height = document.documentElement.clientHeight;
 let width = document.documentElement.clientWidth;
 document.querySelector('.grid-container').style.height = height + "px";
+document.querySelector('.chat').style.height = height + "px";
+document.querySelector('.chat').style.width = width + "px";
 let open = false;
 const sidebar = document.querySelector('.sidebar');
 const iconbutton = document.querySelector('.menu-icon');
@@ -17,6 +19,11 @@ document.querySelector('.Plugins').onclick = function() {
     window.location.href = "Plugins.html"
 
 }
+
+
+// Socket io
+const socket = io("http://localhost:5000")
+
 
 console.log("Loading tensorflow")
 
@@ -133,6 +140,12 @@ async function recordAudio() {
         if (endTime - startTime < 1.5)
         {
             console.log("Too short to send")
+            isListening=false
+            audioData = []
+            return
+        }
+        if (numAverage(EnergyList) < 1000){
+            console.log("Energy too low, probably ghost record")
             isListening=false
             audioData = []
             return

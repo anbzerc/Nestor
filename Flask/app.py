@@ -6,7 +6,7 @@ from threading import Thread
 from faster_whisper import WhisperModel
 from flask import Flask, render_template, request
 from flask_cors import cross_origin
-
+from flask_socketio import SocketIO, emit
 
 
 sys.path.append('../Nestor/')
@@ -15,6 +15,7 @@ from Api.Plugins import *
 
 def main():
     app = Flask(__name__)
+    socketio = SocketIO(app)
 
     root_path = str(pathlib.Path().absolute()).replace("/Flask", "")
 
@@ -28,6 +29,19 @@ def main():
     nestor = Nestor(audio_data_queues, model=model)
     nestor_thread = Thread(target=nestor.main)
     nestor_thread.start()
+
+    # Socket io
+    @socketio.on('connect')
+    def test_connect():
+        emit('my response', {'data': 'Connected'})
+
+    @socketio.on('disconnect')
+    def test_disconnect():
+        print('Client disconnected')
+
+    @socketio.on('upload audio')
+    def test_disconnect():
+        print('Client disconnected')
     @app.route("/")
     def hello_world():
         return render_template('main.html')
