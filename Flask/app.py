@@ -15,7 +15,7 @@ from Api.Plugins import *
 
 def main():
     app = Flask(__name__)
-    socketio = SocketIO(app)
+    socketio = SocketIO(app, cors_allowed_origins='*')
 
     root_path = str(pathlib.Path().absolute()).replace("/Flask", "")
 
@@ -34,6 +34,7 @@ def main():
     @socketio.on('connect')
     def test_connect():
         emit('my response', {'data': 'Connected'})
+        print('Client connected')
 
     @socketio.on('disconnect')
     def test_disconnect():
@@ -95,7 +96,7 @@ def main():
         #Thread(target=transcribe, args=(root_path+"/temp.wav",)).start()
         return "true"
     # Launch app
-    app.run(debug=True)
+    socketio.run(app)
 
 # Test function
 def transcribe(audio_file):
